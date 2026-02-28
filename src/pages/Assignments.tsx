@@ -11,6 +11,8 @@ export default function Assignments() {
     if (newAssignmentTitle.trim()) {
       addAssignment(newAssignmentTitle);
       setNewAssignmentTitle('');
+    } else {
+      alert('Please enter an assignment title!');
     }
   };
 

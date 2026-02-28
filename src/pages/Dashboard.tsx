@@ -8,7 +8,7 @@ export default function Dashboard() {
 
   const handleAction = (e: React.MouseEvent, action: string) => {
     e.preventDefault();
-    alert(`${action} triggered!`);
+    alert(`${action} triggered! Navigate to the respective page to perform this action.`);
   };
 
   return (
@@ -48,8 +48,8 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-auto">
-              <button onClick={(e) => handleAction(e, 'View Details')} className="py-3 px-4 rounded-xl bg-white shadow-skeuo-button text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-black active:shadow-skeuo-button-active transition-all">Details</button>
-              <button onClick={(e) => handleAction(e, 'Send Funds')} className="py-3 px-4 rounded-xl bg-white shadow-skeuo-button text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-black active:shadow-skeuo-button-active transition-all">Send</button>
+              <button className="py-3 px-4 rounded-xl bg-white shadow-skeuo-button text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-black active:shadow-skeuo-button-active transition-all">Details</button>
+              <button className="py-3 px-4 rounded-xl bg-white shadow-skeuo-button text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-black active:shadow-skeuo-button-active transition-all">Send</button>
             </div>
           </Link>
 
@@ -124,7 +124,7 @@ export default function Dashboard() {
               </div>
               <p className="text-sm font-semibold text-gray-600">Smart Casual • Monochrome</p>
             </div>
-            <div onClick={(e) => handleAction(e, 'Generate Outfit')} className="w-full py-3 rounded-xl bg-black text-white shadow-lg shadow-gray-400/50 text-xs font-bold uppercase tracking-widest active:scale-95 transition-transform text-center hover:bg-gray-900 cursor-pointer">Generate New Look</div>
+            <div className="w-full py-3 rounded-xl bg-black text-white shadow-lg shadow-gray-400/50 text-xs font-bold uppercase tracking-widest active:scale-95 transition-transform text-center hover:bg-gray-900 cursor-pointer">Generate New Look</div>
           </Link>
 
           {/* Study Planner Widget */}
@@ -173,7 +173,7 @@ export default function Dashboard() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold text-gray-400">{notes.length} Notes</span>
-              <button onClick={(e) => handleAction(e, 'Create Note')} className="size-8 rounded-full bg-white shadow-skeuo-button flex items-center justify-center hover:scale-110 transition-transform">
+              <button className="size-8 rounded-full bg-white shadow-skeuo-button flex items-center justify-center hover:scale-110 transition-transform">
                 <span className="text-sm text-gray-800">+</span>
               </button>
             </div>

@@ -12,6 +12,8 @@ export default function Tasks() {
     if (newTaskTitle.trim()) {
       addTask(newTaskTitle);
       setNewTaskTitle('');
+    } else {
+      alert('Please enter a task title first!');
     }
   };
 

@@ -1,17 +1,72 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Calendar, Clock, Play, Settings, MoreHorizontal, CheckCircle } from 'lucide-react';
+import { BookOpen, Calendar, Clock, Play, Pause, RotateCcw, Settings, MoreHorizontal, CheckCircle } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+
+const MODES = {
+  POMODORO: { label: 'Pomodoro', seconds: 25 * 60 },
+  SHORT_BREAK: { label: 'Short Break', seconds: 5 * 60 },
+  LONG_BREAK: { label: 'Long Break', seconds: 15 * 60 },
+};
 
 export default function StudyPlanner() {
   const { studySessions, toggleStudySession, addStudySession } = useAppContext();
   const [newSessionDay, setNewSessionDay] = useState('Mon');
   const [newSessionSubject, setNewSessionSubject] = useState('');
 
+  // Timer State
+  const [mode, setMode] = useState('POMODORO');
+  const [timeLeft, setTimeLeft] = useState(MODES.POMODORO.seconds);
+  const [isActive, setIsActive] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (isActive && timeLeft > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setIsActive(false);
+      if (timerRef.current) clearInterval(timerRef.current);
+      alert(`${MODES[mode as keyof typeof MODES].label} finished!`);
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isActive, timeLeft, mode]);
+
+  const toggleTimer = () => setIsActive(!isActive);
+  const resetTimer = () => {
+    setIsActive(false);
+    setTimeLeft(MODES[mode as keyof typeof MODES].seconds);
+  };
+
+  const switchMode = (newMode: string) => {
+    setMode(newMode);
+    setIsActive(false);
+    setTimeLeft(MODES[newMode as keyof typeof MODES].seconds);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const calculateOffset = () => {
+    const total = MODES[mode as keyof typeof MODES].seconds;
+    const progress = (total - timeLeft) / total;
+    const circumference = 2 * Math.PI * 120;
+    return circumference - (progress * circumference);
+  };
+
   const handleAddSession = () => {
     if (newSessionSubject.trim()) {
       addStudySession(newSessionDay, newSessionSubject);
       setNewSessionSubject('');
+    } else {
+      alert('Please specify a subject for the study session.');
     }
   };
 
@@ -43,26 +98,51 @@ export default function StudyPlanner() {
           {/* Pomodoro Timer */}
           <div className="bg-[#222] rounded-xl p-8 border border-gray-800 shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
             <div className="absolute top-4 right-4 flex gap-2">
-              <button className="text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-colors">Pomodoro</button>
-              <button className="text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-colors">Short Break</button>
-              <button className="text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-colors">Long Break</button>
+              {Object.entries(MODES).map(([k, v]) => (
+                <button
+                  key={k}
+                  onClick={() => switchMode(k)}
+                  className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${mode === k ? 'text-green-400' : 'text-gray-500 hover:text-white'}`}
+                >
+                  {v.label}
+                </button>
+              ))}
             </div>
 
             <div className="mt-12 mb-8 relative">
               <svg className="w-64 h-64 transform -rotate-90">
                 <circle cx="128" cy="128" r="120" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-gray-800" />
-                <circle cx="128" cy="128" r="120" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="753.98" strokeDashoffset="188.49" className="text-green-500 transition-all duration-1000 ease-linear" />
+                <circle
+                  cx="128"
+                  cy="128"
+                  r="120"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  strokeDasharray="753.98"
+                  strokeDashoffset={calculateOffset()}
+                  className="text-green-500 transition-all duration-1000 ease-linear"
+                />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-6xl font-black text-white tracking-tighter">25:00</span>
-                <span className="text-sm font-bold text-gray-500 uppercase tracking-widest mt-2">Focus</span>
+                <span className="text-6xl font-black text-white tracking-tighter">{formatTime(timeLeft)}</span>
+                <span className="text-sm font-bold text-gray-500 uppercase tracking-widest mt-2">{MODES[mode as keyof typeof MODES].label}</span>
               </div>
             </div>
 
             <div className="flex gap-4 w-full">
-              <button className="flex-1 py-4 bg-white text-black rounded-lg font-bold text-lg uppercase tracking-widest hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
-                <Play fill="currentColor" size={20} />
-                Start
+              <button
+                onClick={toggleTimer}
+                className="flex-1 py-4 bg-white text-black rounded-lg font-bold text-lg uppercase tracking-widest hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+              >
+                {isActive ? <Pause fill="currentColor" size={20} /> : <Play fill="currentColor" size={20} />}
+                {isActive ? 'Pause' : 'Start'}
+              </button>
+              <button
+                onClick={resetTimer}
+                className="p-4 bg-gray-800 text-gray-400 rounded-lg hover:text-white transition-colors"
+              >
+                <RotateCcw size={20} />
               </button>
             </div>
           </div>
