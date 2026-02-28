@@ -1,10 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Grid, Wallet, CheckCircle, Shirt, Power } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
+import { DashboardService } from '../services/apiServices';
 
 export default function Dashboard() {
-  const { transactions, tasks, assignments, studySessions, notes } = useAppContext();
+  const { tasks, assignments, studySessions, notes } = useAppContext();
+  const { user } = useAuth();
+
+  const [summary, setSummary] = useState<any>(null);
+
+  useEffect(() => {
+    fetchSummary();
+  }, []);
+
+  const fetchSummary = async () => {
+    try {
+      const response = await DashboardService.getSummary();
+      if (response?.data) {
+        setSummary(response.data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleAction = (e: React.MouseEvent, action: string) => {
     e.preventDefault();
@@ -17,7 +37,7 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto relative z-10">
         <header className="mb-10 flex items-end justify-between">
           <div>
-            <h2 className="text-4xl font-black text-white tracking-tight">Welcome back, <span className="text-gray-400">Alex.</span></h2>
+            <h2 className="text-4xl font-black text-white tracking-tight">Welcome back, <span className="text-gray-400">{user?.email?.split('@')[0] || 'Pilot'}.</span></h2>
             <p className="text-gray-500 mt-2 font-medium">System status: All modules operational.</p>
           </div>
           <div className="text-right hidden md:block">
@@ -39,10 +59,10 @@ export default function Dashboard() {
               <div className="size-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
             </div>
             <div className="skeuo-inset-light rounded-2xl p-6 shadow-skeuo-inner border border-white/60">
-              <p className="text-[10px] uppercase font-black text-gray-400 tracking-[0.2em] mb-1">Current Balance</p>
+              <p className="text-[10px] uppercase font-black text-gray-400 tracking-[0.2em] mb-1">Total Spent</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-black text-gray-900 tracking-tighter">
-                  {transactions.reduce((acc, t) => t.type === 'INCOME' ? acc + t.amount : acc - t.amount, 10000).toLocaleString('en-AE')} AED
+                  {summary?.finance?.totalSpent?.toLocaleString('en-US') || 0} USD
                 </span>
                 <span className="text-green-600 text-sm font-bold bg-green-100 px-1.5 py-0.5 rounded">+2.4%</span>
               </div>

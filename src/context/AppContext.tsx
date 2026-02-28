@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from './AuthContext';
+import { FinanceService, AssignmentService } from '../services/apiServices';
 
 export type TransactionType = 'INCOME' | 'EXPENSE';
 
@@ -73,17 +75,39 @@ const AppContext = createContext<AppContextType>(defaultContext);
 export const useAppContext = () => useContext(AppContext);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-    const [transactions, setTransactions] = useState<Transaction[]>([
-        { id: '1', date: 'OCT 14', amount: 2400.0, description: 'Consulting Services', type: 'INCOME' },
-        { id: '2', date: 'OCT 12', amount: 450.2, description: 'Cloud Infrastructure', type: 'EXPENSE' },
-        { id: '3', date: 'OCT 10', amount: 12.5, description: 'Operating Expense', type: 'EXPENSE' },
-        { id: '4', date: 'OCT 08', amount: 1120.0, description: 'Development Project', type: 'INCOME' },
-        { id: '5', date: 'OCT 05', amount: 2199.0, description: 'Asset Purchase', type: 'EXPENSE' },
-    ]);
+    const { isAuthenticated } = useAuth();
 
-    const addTransaction = (t: Omit<Transaction, 'id'>) => {
-        const newTransaction = { ...t, id: Math.random().toString(36).substring(7) };
-        setTransactions([newTransaction, ...transactions]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchData();
+        }
+    }, [isAuthenticated]);
+
+    const fetchData = async () => {
+        try {
+            const [financeRes, assignRes] = await Promise.all([
+                FinanceService.getTransactions(),
+                AssignmentService.getAssignments()
+            ]);
+
+            if (financeRes?.data) setTransactions(financeRes.data);
+            if (assignRes?.data) setAssignments(assignRes.data);
+        } catch (error) {
+            console.error('Error fetching context data:', error);
+        }
+    };
+
+    const addTransaction = async (t: Omit<Transaction, 'id'>) => {
+        try {
+            const res = await FinanceService.createTransaction(t);
+            if (res?.data) {
+                setTransactions([res.data, ...transactions]);
+            }
+        } catch (error) {
+            console.error('Failed to create transaction', error);
+        }
     };
 
     const [tasks, setTasks] = useState<Task[]>([
@@ -100,17 +124,28 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setTasks([{ id: Math.random().toString(36).substring(7), title, completed: false }, ...tasks]);
     };
 
-    const [assignments, setAssignments] = useState<Assignment[]>([
-        { id: '1', title: 'Quarterly Audit', progress: 75 },
-        { id: '2', title: 'Research Phase', progress: 40 },
-    ]);
+    const [assignments, setAssignments] = useState<Assignment[]>([]);
 
-    const updateAssignmentProgress = (id: string, progress: number) => {
-        setAssignments(assignments.map(a => a.id === id ? { ...a, progress } : a));
+    const updateAssignmentProgress = async (id: string, progress: number) => {
+        try {
+            // Mapping progress into Backend status: >50% means completed for simplicity of DB schema
+            const status = progress >= 100 ? 'completed' : 'pending';
+            await AssignmentService.updateAssignment(id, { status });
+            setAssignments(assignments.map(a => a.id === id ? { ...a, progress } : a));
+        } catch (error) {
+            console.error('Failed to update assignment', error);
+        }
     };
 
-    const addAssignment = (title: string) => {
-        setAssignments([{ id: Math.random().toString(36).substring(7), title, progress: 0 }, ...assignments]);
+    const addAssignment = async (title: string) => {
+        try {
+            const res = await AssignmentService.createAssignment({ title, status: 'pending' });
+            if (res?.data) {
+                setAssignments([{ ...res.data, progress: 0 }, ...assignments]);
+            }
+        } catch (error) {
+            console.error('Failed to add assignment', error);
+        }
     };
 
     const [studySessions, setStudySessions] = useState<StudySession[]>([

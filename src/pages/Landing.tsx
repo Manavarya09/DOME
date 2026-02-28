@@ -1,8 +1,16 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, Navigate } from 'react-router-dom';
 import { ArrowRight, Grid, Layers, Wallet, CheckCircle, Shirt } from 'lucide-react';
+import AuthModal from '../components/AuthModal';
+import { useAuth } from '../context/AuthContext';
 
 export default function Landing() {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
   return (
     <div className="bg-black text-white min-h-screen font-sans selection:bg-white selection:text-black flex flex-col">
       <header className="px-8 py-6 flex items-center justify-between sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
@@ -18,10 +26,10 @@ export default function Landing() {
           <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
         </nav>
         <div className="flex items-center gap-4">
-          <Link to="/dashboard" className="text-sm font-bold uppercase tracking-widest hover:text-gray-300 transition-colors hidden sm:block">Log In</Link>
-          <Link to="/dashboard" className="px-6 py-3 rounded-full bg-white text-black font-black text-sm uppercase tracking-widest hover:bg-gray-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]">
+          <button onClick={() => setIsAuthModalOpen(true)} className="text-sm font-bold uppercase tracking-widest hover:text-gray-300 transition-colors hidden sm:block">Log In</button>
+          <button onClick={() => setIsAuthModalOpen(true)} className="px-6 py-3 rounded-full bg-white text-black font-black text-sm uppercase tracking-widest hover:bg-gray-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]">
             Get Started
-          </Link>
+          </button>
         </div>
       </header>
 
@@ -35,21 +43,21 @@ export default function Landing() {
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
             DOME OS v2.0 is now live
           </div>
-          
+
           <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-none">
-            YOUR LIFE,<br/>
+            YOUR LIFE,<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-400 to-gray-600">BEAUTIFULLY ORGANIZED.</span>
           </h1>
-          
+
           <p className="text-xl md:text-2xl text-gray-400 font-medium max-w-2xl leading-relaxed mt-4">
             A unified, monochrome workspace designed to reduce cognitive load and elevate your daily productivity.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row items-center gap-4 mt-8">
-            <Link to="/dashboard" className="px-8 py-4 rounded-full bg-white text-black font-black text-lg uppercase tracking-widest hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.2)] flex items-center gap-3 w-full sm:w-auto justify-center">
+            <button onClick={() => setIsAuthModalOpen(true)} className="px-8 py-4 rounded-full bg-white text-black font-black text-lg uppercase tracking-widest hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.2)] flex items-center gap-3 w-full sm:w-auto justify-center">
               Enter DOME
               <ArrowRight size={20} />
-            </Link>
+            </button>
             <button className="px-8 py-4 rounded-full border border-white/20 text-white font-bold text-lg uppercase tracking-widest hover:bg-white/10 transition-colors w-full sm:w-auto justify-center">
               View Demo
             </button>
@@ -67,7 +75,7 @@ export default function Landing() {
               <p className="text-gray-400 leading-relaxed">Track expenses, manage budgets, and visualize your wealth in a clean, distraction-free interface.</p>
             </div>
           </Link>
-          
+
           <Link to="/notes" className="p-8 rounded-3xl bg-[#111] border border-white/10 hover:border-white/30 transition-colors group text-left flex flex-col gap-6 md:-translate-y-8">
             <div className="size-14 rounded-2xl bg-white text-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
               <Layers size={28} />
@@ -77,7 +85,7 @@ export default function Landing() {
               <p className="text-gray-400 leading-relaxed">Capture thoughts instantly with our skeuomorphic notebook design. Tactile, intuitive, and always ready.</p>
             </div>
           </Link>
-          
+
           <Link to="/assignments" className="p-8 rounded-3xl bg-[#111] border border-white/10 hover:border-white/30 transition-colors group text-left flex flex-col gap-6">
             <div className="size-14 rounded-2xl bg-white text-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
               <CheckCircle size={28} />
@@ -93,6 +101,8 @@ export default function Landing() {
       <footer className="border-t border-white/10 py-12 px-8 text-center text-gray-500 text-sm font-bold uppercase tracking-widest relative z-10 bg-black">
         <p>© 2024 DOME OS. All rights reserved.</p>
       </footer>
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
   );
 }

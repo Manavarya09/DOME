@@ -21,10 +21,10 @@ export default function Finance() {
     }
 
     addTransaction({
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).toUpperCase(),
       amount,
       description: descInput,
-      type: transactionType
+      type: transactionType,
+      date: new Date().toISOString()
     });
 
     setAmountInput('');
@@ -140,7 +140,9 @@ export default function Finance() {
                         <tbody>
                           {transactions.map(t => (
                             <tr key={t.id} className="hover:bg-black/5 transition-colors group">
-                              <td className="px-6 py-3 border-r border-black/10 text-zinc-800">{t.date}</td>
+                              <td className="px-6 py-3 border-r border-black/10 text-zinc-800">
+                                {new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).toUpperCase()}
+                              </td>
                               <td className="px-4 py-3 border-r border-black/10">
                                 <div className="font-bold text-black uppercase">REF_ID_{t.id.substring(0, 6)}</div>
                                 <div className="text-[10px] text-zinc-500 uppercase">{t.description}</div>

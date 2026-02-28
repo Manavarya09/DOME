@@ -13,10 +13,12 @@ import Tasks from './pages/Tasks';
 import Assignments from './pages/Assignments';
 import Outfit from './pages/Outfit';
 import StudyPlanner from './pages/StudyPlanner';
+import { Toaster } from 'react-hot-toast';
 
 export default function App() {
   return (
     <Router>
+      <Toaster position="top-center" reverseOrder={false} />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />

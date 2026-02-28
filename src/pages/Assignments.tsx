@@ -62,11 +62,13 @@ export default function Assignments() {
                 <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                 To Do
               </h2>
-              <span className="bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs font-bold">2</span>
+              <span className="bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs font-bold">
+                {assignments.filter(a => a.progress < 100).length}
+              </span>
             </div>
 
             <div className="space-y-3">
-              {assignments.map(assignment => (
+              {assignments.filter(a => a.progress < 100).map(assignment => (
                 <div key={assignment.id} className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                   <div className="flex justify-between items-start mb-2">
                     <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">Task</span>
@@ -81,24 +83,12 @@ export default function Assignments() {
                     type="range"
                     min="0"
                     max="100"
-                    value={assignment.progress}
+                    value={assignment.progress || 0}
                     onChange={(e) => updateAssignmentProgress(assignment.id, parseInt(e.target.value))}
                     className="w-full accent-black cursor-pointer"
                   />
                 </div>
               ))}
-
-              <div className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-red-500">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded">Literature</span>
-                  <span className="text-xs font-bold text-red-500 flex items-center gap-1"><Clock size={12} /> Tomorrow</span>
-                </div>
-                <h3 className="font-bold text-gray-900 mb-1">Essay Draft</h3>
-                <p className="text-sm text-gray-500 line-clamp-2 mb-3">Submit the first draft of the comparative essay.</p>
-                <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: '20%' }}></div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -109,21 +99,24 @@ export default function Assignments() {
                 <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
                 In Progress
               </h2>
-              <span className="bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs font-bold">1</span>
+              <span className="bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs font-bold">
+                {assignments.filter(a => a.progress > 0 && a.progress < 100).length}
+              </span>
             </div>
 
             <div className="space-y-3">
-              <div className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">Science</span>
-                  <span className="text-xs font-medium text-gray-500 flex items-center gap-1"><Calendar size={12} /> Nov 02</span>
+              {assignments.filter(a => a.progress > 0 && a.progress < 100).map(assignment => (
+                <div key={assignment.id} className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">Active</span>
+                    <span className="text-xs font-medium text-gray-500 flex items-center gap-1"><Calendar size={12} /> Due Soon</span>
+                  </div>
+                  <h3 className="font-bold text-gray-900 mb-1">{assignment.title}</h3>
+                  <div className="w-full bg-gray-100 rounded-full h-1.5 mt-3">
+                    <div className="bg-green-500 h-1.5 rounded-full" style={{ width: `${assignment.progress}%` }}></div>
+                  </div>
                 </div>
-                <h3 className="font-bold text-gray-900 mb-1">Lab Report: Titration</h3>
-                <p className="text-sm text-gray-500 line-clamp-2 mb-3">Write up the findings from Tuesday's chemistry lab.</p>
-                <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '65%' }}></div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -134,21 +127,24 @@ export default function Assignments() {
                 <div className="w-2 h-2 rounded-full bg-gray-500"></div>
                 Completed
               </h2>
-              <span className="bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs font-bold">1</span>
+              <span className="bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs font-bold">
+                {assignments.filter(a => a.progress >= 100).length}
+              </span>
             </div>
 
             <div className="space-y-3">
-              <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl shadow-sm cursor-pointer">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-bold text-gray-600 bg-gray-200 px-2 py-1 rounded">History</span>
-                  <span className="text-xs font-medium text-green-600 flex items-center gap-1"><CheckCircle size={12} /> Done</span>
+              {assignments.filter(a => a.progress >= 100).map(assignment => (
+                <div key={assignment.id} className="bg-gray-50 border border-gray-200 p-4 rounded-xl shadow-sm cursor-pointer">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-xs font-bold text-gray-600 bg-gray-200 px-2 py-1 rounded">Done</span>
+                    <span className="text-xs font-medium text-green-600 flex items-center gap-1"><CheckCircle size={12} /> Complete</span>
+                  </div>
+                  <h3 className="font-bold text-gray-500 line-through mb-1">{assignment.title}</h3>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5 mt-3">
+                    <div className="bg-gray-400 h-1.5 rounded-full" style={{ width: '100%' }}></div>
+                  </div>
                 </div>
-                <h3 className="font-bold text-gray-500 line-through mb-1">Chapter 3 Reading</h3>
-                <p className="text-sm text-gray-400 line-clamp-2 mb-3">Read pages 45-70 and answer the discussion questions.</p>
-                <div className="w-full bg-gray-200 rounded-full h-1.5">
-                  <div className="bg-gray-400 h-1.5 rounded-full" style={{ width: '100%' }}></div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
