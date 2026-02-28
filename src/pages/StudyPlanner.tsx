@@ -1,8 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Calendar, Clock, Play, Settings, MoreHorizontal, CheckCircle } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
 
 export default function StudyPlanner() {
+  const { studySessions, toggleStudySession, addStudySession } = useAppContext();
+  const [newSessionDay, setNewSessionDay] = useState('Mon');
+  const [newSessionSubject, setNewSessionSubject] = useState('');
+
+  const handleAddSession = () => {
+    if (newSessionSubject.trim()) {
+      addStudySession(newSessionDay, newSessionSubject);
+      setNewSessionSubject('');
+    }
+  };
+
   return (
     <div className="bg-[#1a1a1a] font-mono text-gray-300 h-full flex flex-col overflow-y-auto">
       <header className="bg-[#222] border-b border-gray-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
@@ -25,7 +37,7 @@ export default function StudyPlanner() {
       </header>
 
       <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* Left Column - Timer & Current Session */}
         <div className="lg:col-span-4 flex flex-col gap-8">
           {/* Pomodoro Timer */}
@@ -35,7 +47,7 @@ export default function StudyPlanner() {
               <button className="text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-colors">Short Break</button>
               <button className="text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-colors">Long Break</button>
             </div>
-            
+
             <div className="mt-12 mb-8 relative">
               <svg className="w-64 h-64 transform -rotate-90">
                 <circle cx="128" cy="128" r="120" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-gray-800" />
@@ -46,7 +58,7 @@ export default function StudyPlanner() {
                 <span className="text-sm font-bold text-gray-500 uppercase tracking-widest mt-2">Focus</span>
               </div>
             </div>
-            
+
             <div className="flex gap-4 w-full">
               <button className="flex-1 py-4 bg-white text-black rounded-lg font-bold text-lg uppercase tracking-widest hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
                 <Play fill="currentColor" size={20} />
@@ -72,7 +84,7 @@ export default function StudyPlanner() {
               </div>
               <div className="flex items-center gap-2 text-xs font-bold bg-gray-800 px-3 py-1.5 rounded-md text-gray-300">
                 <CheckCircle size={14} className="text-gray-500" />
-                0/3 Pomodoros
+                {studySessions.filter(s => s.completed).length}/{studySessions.length} Sessions Done
               </div>
             </div>
           </div>
@@ -82,31 +94,44 @@ export default function StudyPlanner() {
         <div className="lg:col-span-8 flex flex-col gap-8">
           {/* Weekly Schedule Overview */}
           <div className="bg-[#222] rounded-xl p-6 border border-gray-800 shadow-lg">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <Calendar size={20} className="text-gray-500" />
                 This Week
               </h3>
               <div className="flex gap-2">
-                <button className="p-1.5 rounded bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">&lt;</button>
-                <button className="p-1.5 rounded bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">&gt;</button>
+                <select
+                  value={newSessionDay}
+                  onChange={e => setNewSessionDay(e.target.value)}
+                  className="bg-gray-800 border-none text-white text-sm rounded-lg py-1.5 px-3 focus:ring-2 focus:ring-green-500"
+                >
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+                <input
+                  type="text"
+                  value={newSessionSubject}
+                  onChange={e => setNewSessionSubject(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAddSession()}
+                  placeholder="Subject..."
+                  className="bg-gray-800 border-none text-white text-sm rounded-lg py-1.5 px-3 focus:ring-2 focus:ring-green-500 w-32"
+                />
+                <button onClick={handleAddSession} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-bold transition-colors">
+                  Add
+                </button>
               </div>
             </div>
-            
-            <div className="grid grid-cols-7 gap-2">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
-                <div key={day} className={`flex flex-col items-center p-3 rounded-lg border ${i === 2 ? 'border-green-500 bg-green-500/10' : 'border-gray-800 bg-[#1a1a1a]'}`}>
-                  <span className={`text-xs font-bold uppercase ${i === 2 ? 'text-green-400' : 'text-gray-500'}`}>{day}</span>
-                  <span className={`text-xl font-black mt-1 ${i === 2 ? 'text-white' : 'text-gray-400'}`}>{23 + i}</span>
+
+            <div className="grid grid-cols-3 md:grid-cols-7 gap-2">
+              {studySessions.map((session) => (
+                <div
+                  key={session.id}
+                  onClick={() => toggleStudySession(session.id)}
+                  className={`flex flex-col items-center p-3 rounded-lg border cursor-pointer hover:bg-gray-800/50 transition-colors ${session.completed ? 'border-green-500 bg-green-500/10' : 'border-gray-800 bg-[#1a1a1a]'}`}
+                >
+                  <span className={`text-xs font-bold uppercase ${session.completed ? 'text-green-400' : 'text-gray-500'}`}>{session.day}</span>
+                  <span className={`text-lg font-black mt-1 ${session.completed ? 'text-white' : 'text-gray-400'}`}>{session.subject}</span>
                   <div className="mt-3 flex flex-col gap-1 w-full">
-                    {i === 1 && <div className="h-1.5 w-full bg-blue-500 rounded-full"></div>}
-                    {i === 2 && (
-                      <>
-                        <div className="h-1.5 w-full bg-blue-500 rounded-full"></div>
-                        <div className="h-1.5 w-full bg-purple-500 rounded-full"></div>
-                      </>
-                    )}
-                    {i === 4 && <div className="h-1.5 w-full bg-yellow-500 rounded-full"></div>}
+                    <div className={`h-1.5 w-full rounded-full ${session.completed ? 'bg-green-500' : 'bg-gray-700'}`}></div>
                   </div>
                 </div>
               ))}
@@ -119,7 +144,7 @@ export default function StudyPlanner() {
               <h3 className="text-lg font-bold text-white">Upcoming Deadlines</h3>
               <button className="text-sm font-bold text-gray-400 hover:text-white transition-colors">View All</button>
             </div>
-            
+
             <div className="space-y-4 flex-1 overflow-y-auto pr-2">
               {/* Item 1 */}
               <div className="flex items-start gap-4 p-4 rounded-lg bg-[#1a1a1a] border border-gray-800 hover:border-gray-700 transition-colors group">

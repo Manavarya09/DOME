@@ -1,8 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layers, Search, Plus, Share2, Bookmark, MoreHorizontal, Settings } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
 
 export default function Notes() {
+  const { notes, addNote } = useAppContext();
+  const [activeNoteId, setActiveNoteId] = useState<string | null>(notes.length > 0 ? notes[0].id : null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newContent, setNewContent] = useState('');
+
   const handleAction = (action: string) => {
     alert(`${action} triggered!`);
   };
@@ -32,38 +39,23 @@ export default function Notes() {
       <main className="flex-grow flex p-4 md:p-8 gap-6 max-h-full overflow-hidden">
         <aside className="w-64 md:w-80 flex-none flex flex-col gap-6 relative z-10 hidden md:flex">
           <div className="px-2">
-            <button onClick={() => handleAction('New Entry')} className="clicker-btn w-full h-12 rounded-lg flex items-center justify-center gap-2 text-dome-dark-gray font-bold tracking-wide text-sm uppercase">
+            <button onClick={() => { setIsEditing(true); setNewTitle('New Note'); setNewContent(''); setActiveNoteId(null); }} className="clicker-btn w-full h-12 rounded-lg flex items-center justify-center gap-2 text-dome-dark-gray font-bold tracking-wide text-sm uppercase">
               <Plus size={18} />
               New Entry
             </button>
           </div>
 
           <div className="flex-grow flex flex-col gap-1 overflow-y-auto pr-2 pb-4">
-            <div className="group cursor-pointer relative">
-              <div className="absolute left-0 top-1 bottom-1 w-4 bg-gray-900 rounded-l-md z-10 shadow-lg"></div>
-              <div className="ml-2 leather-texture h-16 rounded-r-md rounded-l-sm shadow-xl flex items-center justify-between px-6 border-t border-b border-r border-gray-800 relative transform transition-transform group-hover:-translate-x-1">
-                <div className="absolute right-4 top-0 bottom-0 w-3 bg-gray-900 shadow-md opacity-80"></div>
-                <span className="text-gray-200 font-bold tracking-wide text-sm ml-2">Project Alpha</span>
-                <span className="text-gray-500 text-xs font-mono">12</span>
+            {notes.map((note, index) => (
+              <div key={note.id} className="group cursor-pointer relative" onClick={() => { setActiveNoteId(note.id); setIsEditing(false); }}>
+                <div className={`absolute left-0 top-1 bottom-1 w-4 rounded-l-md z-10 shadow-lg ${activeNoteId === note.id ? 'bg-gray-900' : 'bg-gray-400 group-hover:bg-gray-700 transition-colors'}`}></div>
+                <div className={`ml-2 h-16 rounded-r-md rounded-l-sm shadow-xl flex items-center justify-between px-6 border-t border-b border-r border-gray-800 relative transform transition-transform group-hover:-translate-x-1 ${activeNoteId === note.id ? 'leather-texture' : 'bg-gray-200'}`}>
+                  {activeNoteId === note.id && <div className="absolute right-4 top-0 bottom-0 w-3 bg-gray-900 shadow-md opacity-80"></div>}
+                  <span className={`font-bold tracking-wide text-sm ml-2 truncate ${activeNoteId === note.id ? 'text-gray-200' : 'text-gray-700'}`}>{note.title}</span>
+                  <span className="text-gray-500 text-xs font-mono">{note.date}</span>
+                </div>
               </div>
-            </div>
-
-            <div className="group cursor-pointer relative mt-2 opacity-90 hover:opacity-100 transition-opacity">
-              <div className="absolute left-0 top-1 bottom-1 w-4 bg-gray-700 rounded-l-md z-10 shadow-lg"></div>
-              <div className="ml-2 bg-dome-dark-gray h-14 rounded-r-md rounded-l-sm shadow-lg flex items-center justify-between px-6 border border-gray-600 relative transform transition-transform group-hover:-translate-x-1">
-                <span className="text-gray-300 font-medium tracking-wide text-sm ml-2">Q3 Financials</span>
-                <span className="text-gray-500 text-xs font-mono">4</span>
-              </div>
-            </div>
-
-            <div className="group cursor-pointer relative mt-2 opacity-90 hover:opacity-100 transition-opacity">
-              <div className="absolute left-0 top-1 bottom-1 w-4 bg-gray-300 rounded-l-md z-10 shadow-lg border-l border-gray-400"></div>
-              <div className="ml-2 bg-gray-100 h-14 rounded-r-md rounded-l-sm shadow-lg flex items-center justify-between px-6 border border-gray-300 relative transform transition-transform group-hover:-translate-x-1">
-                <div className="absolute right-4 top-0 bottom-0 w-3 bg-gray-200 shadow-inner opacity-60 border-x border-gray-300"></div>
-                <span className="text-gray-600 font-medium tracking-wide text-sm ml-2">Personal Goals</span>
-                <span className="text-gray-400 text-xs font-mono">8</span>
-              </div>
-            </div>
+            ))}
 
             <div className="mt-auto pt-6 px-4">
               <div className="h-2 w-full bg-gray-300 rounded-sm border border-gray-400 mx-auto shadow-sm mb-1 transform scale-95"></div>
@@ -92,68 +84,69 @@ export default function Notes() {
           </div>
 
           <div className="flex-grow bg-white shadow-paper rounded-b-md rounded-tr-md relative flex flex-col z-20 overflow-hidden mx-1 mb-1">
-            <div className="h-16 border-b border-gray-200 bg-white flex items-center px-8 justify-between flex-none z-10">
-              <div className="flex flex-col">
-                <h1 className="font-mono text-2xl font-bold text-dome-black tracking-tight">Q4 Roadmap Brainstorm</h1>
-                <span className="text-xs text-gray-400 font-mono">Last edited: Today, 10:42 AM</span>
+            {isEditing ? (
+              <div className="flex-1 flex flex-col p-8">
+                <input
+                  value={newTitle}
+                  onChange={e => setNewTitle(e.target.value)}
+                  className="font-mono text-2xl font-bold text-dome-black tracking-tight border-b border-gray-200 pb-2 mb-4 focus:outline-none"
+                  placeholder="Note Title"
+                />
+                <textarea
+                  value={newContent}
+                  onChange={e => setNewContent(e.target.value)}
+                  className="flex-1 resize-none focus:outline-none font-mono text-dome-dark-gray text-lg"
+                  placeholder="Start typing..."
+                />
+                <button
+                  onClick={() => { addNote(newTitle, newContent); setIsEditing(false); }}
+                  className="mt-4 bg-black text-white py-2 px-4 rounded self-end font-bold"
+                >
+                  Save Note
+                </button>
               </div>
-              <div className="flex gap-3">
-                <Share2 onClick={() => handleAction('Share Note')} size={20} className="text-gray-400 hover:text-dome-black cursor-pointer" />
-                <Bookmark onClick={() => handleAction('Bookmark Note')} size={20} className="text-gray-400 hover:text-dome-black cursor-pointer" />
-                <MoreHorizontal onClick={() => handleAction('More Options')} size={20} className="text-gray-400 hover:text-dome-black cursor-pointer" />
-              </div>
-            </div>
-
-            <div className="flex-grow relative overflow-hidden flex">
-              <div className="w-16 h-full border-r border-red-200 bg-white flex-none flex flex-col items-center py-8 gap-12 relative z-10">
-                <div className="absolute -left-3 top-10 flex flex-col gap-32">
-                  <div className="binder-ring"></div>
-                  <div className="binder-ring"></div>
-                  <div className="binder-ring"></div>
+            ) : (
+              <>
+                <div className="h-16 border-b border-gray-200 bg-white flex items-center px-8 justify-between flex-none z-10">
+                  <div className="flex flex-col">
+                    <h1 className="font-mono text-2xl font-bold text-dome-black tracking-tight">{activeNoteId ? notes.find(n => n.id === activeNoteId)?.title : 'Select a note'}</h1>
+                    <span className="text-xs text-gray-400 font-mono">Last edited: {activeNoteId ? notes.find(n => n.id === activeNoteId)?.date : 'N/A'}</span>
+                  </div>
+                  <div className="flex gap-3">
+                    <Share2 onClick={() => handleAction('Share Note')} size={20} className="text-gray-400 hover:text-dome-black cursor-pointer" />
+                    <Bookmark onClick={() => handleAction('Bookmark Note')} size={20} className="text-gray-400 hover:text-dome-black cursor-pointer" />
+                    <MoreHorizontal onClick={() => handleAction('More Options')} size={20} className="text-gray-400 hover:text-dome-black cursor-pointer" />
+                  </div>
                 </div>
-                <div className="w-4 h-4 rounded-full bg-gray-800 shadow-inner mt-4"></div>
-                <div className="w-4 h-4 rounded-full bg-gray-800 shadow-inner mt-24"></div>
-                <div className="w-4 h-4 rounded-full bg-gray-800 shadow-inner mt-24"></div>
-              </div>
 
-              <div className="flex-grow h-full overflow-y-auto ruled-paper relative">
-                <div className="paper-clip"></div>
-                <div className="p-8 max-w-3xl font-mono text-dome-dark-gray text-lg ruled-paper-content">
-                  <p className="mb-8">
-                    Objective: Define key deliverables for the upcoming cycle. Focus on monochrome transition and skeuomorphic elements.
-                  </p>
-                  <p className="mb-8">
-                    1. Review current design assets.<br />
-                    2. Establish texture library (leather, paper, metal).<br />
-                    3. Finalize typography choices: Inter for UI, Courier for content.
-                  </p>
-                  <p className="mb-8">
-                    <span className="bg-yellow-100 px-1 border-b border-yellow-200">Idea:</span> Should the "Save" interaction feel like a stamp?
-                  </p>
-                  <p className="mb-8 text-gray-400 italic">
-                    // Remember to check contrast ratios for the light theme.
-                  </p>
-                  <p className="mb-8">
-                    Meeting Notes:<br />
-                    - Client prefers tactile feedback on hover states.<br />
-                    - Shadow depth should be realistic, simulating a single top-down light source.
-                  </p>
-                  <p className="mb-8">
-                    Action Items:<br />
-                    [ ] Prototype the filing cabinet animation.<br />
-                    [x] Update color palette variables.<br />
-                    [ ] Schedule user testing session.
-                  </p>
-                  <div className="h-32"></div>
+                <div className="flex-grow relative overflow-hidden flex">
+                  <div className="w-16 h-full border-r border-red-200 bg-white flex-none flex flex-col items-center py-8 gap-12 relative z-10">
+                    <div className="absolute -left-3 top-10 flex flex-col gap-32">
+                      <div className="binder-ring"></div>
+                      <div className="binder-ring"></div>
+                      <div className="binder-ring"></div>
+                    </div>
+                    <div className="w-4 h-4 rounded-full bg-gray-800 shadow-inner mt-4"></div>
+                    <div className="w-4 h-4 rounded-full bg-gray-800 shadow-inner mt-24"></div>
+                    <div className="w-4 h-4 rounded-full bg-gray-800 shadow-inner mt-24"></div>
+                  </div>
+
+                  <div className="flex-grow h-full overflow-y-auto ruled-paper relative">
+                    <div className="paper-clip"></div>
+                    <div className="p-8 max-w-3xl font-mono text-dome-dark-gray text-lg ruled-paper-content whitespace-pre-wrap">
+                      {activeNoteId ? notes.find(n => n.id === activeNoteId)?.preview : 'Empty note.'}
+                      <div className="h-32"></div>
+                    </div>
+                  </div>
+                  <div className="absolute right-0 top-0 bottom-0 w-3 bg-transparent border-l border-gray-100 pointer-events-none"></div>
                 </div>
-              </div>
-              <div className="absolute right-0 top-0 bottom-0 w-3 bg-transparent border-l border-gray-100 pointer-events-none"></div>
-            </div>
 
-            <div className="h-8 border-t border-gray-100 bg-white flex items-center justify-between px-4 text-xs font-mono text-gray-400">
-              <span>Page 1 of 1</span>
-              <span>342 Words</span>
-            </div>
+                <div className="h-8 border-t border-gray-100 bg-white flex items-center justify-between px-4 text-xs font-mono text-gray-400">
+                  <span>Page 1 of 1</span>
+                  <span>{activeNoteId ? notes.find(n => n.id === activeNoteId)?.preview.split(' ').length || 0 : 0} Words</span>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="absolute bottom-2 left-6 right-6 h-2 bg-white rounded-b-md shadow-md z-0 transform translate-y-1"></div>

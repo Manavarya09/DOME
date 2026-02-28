@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Grid, Wallet, CheckCircle, Shirt, Power } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
 
 export default function Dashboard() {
+  const { transactions, tasks, assignments, studySessions, notes } = useAppContext();
+
   const handleAction = (e: React.MouseEvent, action: string) => {
     e.preventDefault();
     alert(`${action} triggered!`);
@@ -38,7 +41,9 @@ export default function Dashboard() {
             <div className="skeuo-inset-light rounded-2xl p-6 shadow-skeuo-inner border border-white/60">
               <p className="text-[10px] uppercase font-black text-gray-400 tracking-[0.2em] mb-1">Current Balance</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-gray-900 tracking-tighter">$14,250</span>
+                <span className="text-3xl font-black text-gray-900 tracking-tighter">
+                  {transactions.reduce((acc, t) => t.type === 'INCOME' ? acc + t.amount : acc - t.amount, 10000).toLocaleString('en-AE')} AED
+                </span>
                 <span className="text-green-600 text-sm font-bold bg-green-100 px-1.5 py-0.5 rounded">+2.4%</span>
               </div>
             </div>
@@ -57,23 +62,17 @@ export default function Dashboard() {
                 </div>
                 <h3 className="font-bold text-lg text-gray-800">Task Manager</h3>
               </div>
-              <span className="text-xs font-bold text-gray-400">3 Pending</span>
+              <span className="text-xs font-bold text-gray-400">{tasks.filter(t => !t.completed).length} Pending</span>
             </div>
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-white shadow-skeuo-button border border-gray-100">
-                <div className="size-5 rounded border-2 border-gray-300"></div>
-                <span className="text-sm font-bold text-gray-700">Review Q3 Report</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-white shadow-skeuo-button border border-gray-100">
-                <div className="size-5 rounded border-2 border-gray-800 bg-gray-800 flex items-center justify-center">
-                  <CheckCircle size={16} className="text-white" />
+              {tasks.slice(0, 3).map(task => (
+                <div key={task.id} className="flex items-center gap-3 p-3 rounded-xl bg-white shadow-skeuo-button border border-gray-100">
+                  <div className={`size-5 rounded border-2 ${task.completed ? 'border-gray-800 bg-gray-800 flex items-center justify-center' : 'border-gray-300'}`}>
+                    {task.completed && <CheckCircle size={16} className="text-white" />}
+                  </div>
+                  <span className={`text-sm font-bold ${task.completed ? 'text-gray-400 line-through' : 'text-gray-700'}`}>{task.title}</span>
                 </div>
-                <span className="text-sm font-bold text-gray-400 line-through">Email Client</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-white shadow-skeuo-button border border-gray-100">
-                <div className="size-5 rounded border-2 border-gray-300"></div>
-                <span className="text-sm font-bold text-gray-700">Update Software</span>
-              </div>
+              ))}
             </div>
           </Link>
 
@@ -86,24 +85,17 @@ export default function Dashboard() {
               <h3 className="font-bold text-lg text-gray-800">Assignments</h3>
             </div>
             <div className="space-y-4">
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-xs font-bold text-gray-500">Quarterly Audit</span>
-                  <span className="text-xs font-bold text-gray-900">75%</span>
+              {assignments.map(assignment => (
+                <div key={assignment.id}>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-xs font-bold text-gray-500">{assignment.title}</span>
+                    <span className="text-xs font-bold text-gray-900">{assignment.progress}%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-gray-200 shadow-inner">
+                    <div className="h-full bg-gray-800 rounded-full" style={{ width: `${assignment.progress}%` }}></div>
+                  </div>
                 </div>
-                <div className="h-2 w-full rounded-full bg-gray-200 shadow-inner">
-                  <div className="h-full bg-gray-800 w-3/4 rounded-full"></div>
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-xs font-bold text-gray-500">Research Phase</span>
-                  <span className="text-xs font-bold text-gray-900">40%</span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-gray-200 shadow-inner">
-                  <div className="h-full bg-gray-400 w-2/5 rounded-full"></div>
-                </div>
-              </div>
+              ))}
             </div>
             <div className="mt-auto pt-2">
               <div className="flex items-center justify-between p-3 rounded-xl skeuo-inset-light shadow-skeuo-inner border border-white/60">
@@ -144,18 +136,12 @@ export default function Dashboard() {
               <h3 className="font-bold text-lg text-gray-800">Study Planner</h3>
             </div>
             <div className="flex gap-2 overflow-x-auto pb-2">
-              <div className="flex-shrink-0 w-24 p-3 rounded-xl bg-gray-800 text-white flex flex-col items-center justify-center gap-1 shadow-lg">
-                <span className="text-[10px] uppercase opacity-70">Mon</span>
-                <span className="text-xl font-bold">Math</span>
-              </div>
-              <div className="flex-shrink-0 w-24 p-3 rounded-xl bg-white border border-gray-200 flex flex-col items-center justify-center gap-1 shadow-skeuo-button opacity-50">
-                <span className="text-[10px] uppercase text-gray-500">Tue</span>
-                <span className="text-xl font-bold text-gray-800">Hist</span>
-              </div>
-              <div className="flex-shrink-0 w-24 p-3 rounded-xl bg-white border border-gray-200 flex flex-col items-center justify-center gap-1 shadow-skeuo-button opacity-50">
-                <span className="text-[10px] uppercase text-gray-500">Wed</span>
-                <span className="text-xl font-bold text-gray-800">Sci</span>
-              </div>
+              {studySessions.map(session => (
+                <div key={session.id} className={`flex-shrink-0 w-24 p-3 rounded-xl flex flex-col items-center justify-center gap-1 ${session.completed ? 'bg-gray-800 text-white shadow-lg' : 'bg-white border border-gray-200 shadow-skeuo-button opacity-50'}`}>
+                  <span className={`text-[10px] uppercase ${session.completed ? 'opacity-70' : 'text-gray-500'}`}>{session.day}</span>
+                  <span className={`text-xl font-bold ${session.completed ? '' : 'text-gray-800'}`}>{session.subject}</span>
+                </div>
+              ))}
             </div>
             <div className="flex items-center gap-2 p-3 rounded-xl bg-white shadow-skeuo-button border border-gray-100 mt-auto">
               <CheckCircle size={16} className="text-gray-400" />
@@ -176,13 +162,17 @@ export default function Dashboard() {
             </div>
             <div className="skeuo-inset-light rounded-xl p-4 shadow-skeuo-inner border border-white/60 flex-1 relative">
               <div className="absolute top-0 left-6 bottom-0 w-[1px] bg-red-300/50"></div>
-              <p className="text-sm font-serif text-gray-700 leading-relaxed pl-4" style={{ fontFamily: "'Georgia', serif" }}>
-                <span className="block mb-2 text-xs text-gray-400 font-sans">10:23 AM</span>
-                Meeting with design team regarding the monochrome transition. Needs to be high contrast.
-              </p>
+              {notes.length > 0 ? (
+                <p className="text-sm font-serif text-gray-700 leading-relaxed pl-4 line-clamp-3" style={{ fontFamily: "'Georgia', serif" }}>
+                  <span className="block mb-2 text-xs text-gray-400 font-sans">{notes[0].date} - {notes[0].title}</span>
+                  {notes[0].preview}
+                </p>
+              ) : (
+                <p className="text-sm font-serif text-gray-400 leading-relaxed pl-4 italic">No notes available.</p>
+              )}
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs font-bold text-gray-400">4 Notes</span>
+              <span className="text-xs font-bold text-gray-400">{notes.length} Notes</span>
               <button onClick={(e) => handleAction(e, 'Create Note')} className="size-8 rounded-full bg-white shadow-skeuo-button flex items-center justify-center hover:scale-110 transition-transform">
                 <span className="text-sm text-gray-800">+</span>
               </button>

@@ -1,8 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Search, Plus, Calendar, CheckCircle, Clock } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
 
 export default function Assignments() {
+  const { assignments, updateAssignmentProgress, addAssignment } = useAppContext();
+  const [newAssignmentTitle, setNewAssignmentTitle] = useState('');
+
+  const handleAddAssignment = () => {
+    if (newAssignmentTitle.trim()) {
+      addAssignment(newAssignmentTitle);
+      setNewAssignmentTitle('');
+    }
+  };
+
   return (
     <div className="bg-[#f5f5f5] font-sans text-gray-900 h-full flex flex-col w-full overflow-y-auto">
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
@@ -16,16 +27,26 @@ export default function Assignments() {
           <div className="flex items-center gap-4">
             <div className="relative hidden md:block">
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Search assignments..." 
+              <input
+                type="text"
+                placeholder="Search assignments..."
                 className="pl-10 pr-4 py-2 bg-gray-100 border-transparent rounded-lg text-sm focus:bg-white focus:border-gray-300 focus:ring-2 focus:ring-gray-200 transition-all w-64"
               />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg font-medium text-sm hover:bg-gray-800 transition-colors shadow-md">
-              <Plus size={18} />
-              <span className="hidden sm:inline">New Assignment</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newAssignmentTitle}
+                onChange={e => setNewAssignmentTitle(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddAssignment()}
+                placeholder="New assignment title..."
+                className="px-4 py-2 bg-gray-100 border-transparent rounded-lg text-sm focus:bg-white focus:border-gray-300 focus:ring-2 focus:ring-gray-200 transition-all w-48"
+              />
+              <button onClick={handleAddAssignment} className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg font-medium text-sm hover:bg-gray-800 transition-colors shadow-md">
+                <Plus size={18} />
+                <span className="hidden sm:inline">Add</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -41,24 +62,34 @@ export default function Assignments() {
               </h2>
               <span className="bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs font-bold">2</span>
             </div>
-            
+
             <div className="space-y-3">
-              <div className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">Math</span>
-                  <span className="text-xs font-medium text-gray-500 flex items-center gap-1"><Calendar size={12}/> Oct 28</span>
+              {assignments.map(assignment => (
+                <div key={assignment.id} className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">Task</span>
+                    <span className="text-xs font-medium text-gray-500 flex items-center gap-1"><Calendar size={12} /> Upcoming</span>
+                  </div>
+                  <h3 className="font-bold text-gray-900 mb-1">{assignment.title}</h3>
+                  <div className="flex justify-between items-center mb-1">
+                    <p className="text-sm text-gray-500">Progress</p>
+                    <span className="text-xs font-bold">{assignment.progress}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={assignment.progress}
+                    onChange={(e) => updateAssignmentProgress(assignment.id, parseInt(e.target.value))}
+                    className="w-full accent-black cursor-pointer"
+                  />
                 </div>
-                <h3 className="font-bold text-gray-900 mb-1">Calculus Problem Set 4</h3>
-                <p className="text-sm text-gray-500 line-clamp-2 mb-3">Complete exercises 1-20 on page 142. Show all work.</p>
-                <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: '0%' }}></div>
-                </div>
-              </div>
+              ))}
 
               <div className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-red-500">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded">Literature</span>
-                  <span className="text-xs font-bold text-red-500 flex items-center gap-1"><Clock size={12}/> Tomorrow</span>
+                  <span className="text-xs font-bold text-red-500 flex items-center gap-1"><Clock size={12} /> Tomorrow</span>
                 </div>
                 <h3 className="font-bold text-gray-900 mb-1">Essay Draft</h3>
                 <p className="text-sm text-gray-500 line-clamp-2 mb-3">Submit the first draft of the comparative essay.</p>
@@ -78,12 +109,12 @@ export default function Assignments() {
               </h2>
               <span className="bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs font-bold">1</span>
             </div>
-            
+
             <div className="space-y-3">
               <div className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">Science</span>
-                  <span className="text-xs font-medium text-gray-500 flex items-center gap-1"><Calendar size={12}/> Nov 02</span>
+                  <span className="text-xs font-medium text-gray-500 flex items-center gap-1"><Calendar size={12} /> Nov 02</span>
                 </div>
                 <h3 className="font-bold text-gray-900 mb-1">Lab Report: Titration</h3>
                 <p className="text-sm text-gray-500 line-clamp-2 mb-3">Write up the findings from Tuesday's chemistry lab.</p>
@@ -103,12 +134,12 @@ export default function Assignments() {
               </h2>
               <span className="bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs font-bold">1</span>
             </div>
-            
+
             <div className="space-y-3">
               <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl shadow-sm cursor-pointer">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-bold text-gray-600 bg-gray-200 px-2 py-1 rounded">History</span>
-                  <span className="text-xs font-medium text-green-600 flex items-center gap-1"><CheckCircle size={12}/> Done</span>
+                  <span className="text-xs font-medium text-green-600 flex items-center gap-1"><CheckCircle size={12} /> Done</span>
                 </div>
                 <h3 className="font-bold text-gray-500 line-through mb-1">Chapter 3 Reading</h3>
                 <p className="text-sm text-gray-400 line-clamp-2 mb-3">Read pages 45-70 and answer the discussion questions.</p>

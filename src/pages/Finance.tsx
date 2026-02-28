@@ -1,11 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Wallet, Calendar, User, TrendingUp, PenSquare, PlusCircle, MinusCircle, CornerDownLeft, Printer } from 'lucide-react';
+import { useAppContext, TransactionType } from '../context/AppContext';
 
 export default function Finance() {
+  const { transactions, addTransaction } = useAppContext();
+  const [transactionType, setTransactionType] = useState<TransactionType>('INCOME');
+  const [amountInput, setAmountInput] = useState('');
+  const [descInput, setDescInput] = useState('');
+
   const handleAction = (action: string) => {
     alert(`${action} triggered!`);
   };
+
+  const handleCommit = () => {
+    const amount = parseFloat(amountInput);
+    if (isNaN(amount) || amount <= 0 || !descInput.trim()) {
+      alert('Please enter a valid amount and description.');
+      return;
+    }
+
+    addTransaction({
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).toUpperCase(),
+      amount,
+      description: descInput,
+      type: transactionType
+    });
+
+    setAmountInput('');
+    setDescInput('');
+  };
+
+  const totalLiquidity = transactions.reduce((acc, t) => {
+    return t.type === 'INCOME' ? acc + t.amount : acc - t.amount;
+  }, 10000); // Base starting amount
+
+  const netDebit = transactions.filter(t => t.type === 'EXPENSE').reduce((acc, t) => acc + t.amount, 0);
+  const netCredit = transactions.filter(t => t.type === 'INCOME').reduce((acc, t) => acc + t.amount, 0);
 
   return (
     <div className="bg-background-light dark:bg-zinc-900 font-display text-zinc-900 dark:text-zinc-100 h-full selection:bg-black selection:text-white overflow-y-auto">
@@ -36,7 +67,7 @@ export default function Finance() {
                   <div className="relative z-10 flex flex-col items-center justify-center text-white">
                     <span className="text-white/60 font-mono text-xs tracking-[0.3em] uppercase mb-2">Total Liquidity</span>
                     <div className="font-mono text-5xl md:text-7xl font-bold text-white lcd-glow tracking-tighter">
-                      $12,450.85
+                      {totalLiquidity.toLocaleString('en-AE')} AED
                     </div>
                     <div className="mt-4 flex items-center gap-2 px-3 py-1 rounded bg-white/10 border border-white/20">
                       <TrendingUp size={16} className="text-white" />
@@ -55,11 +86,15 @@ export default function Finance() {
                   </h3>
                   <div className="space-y-6">
                     <div className="flex p-1 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                      <button onClick={() => handleAction('Select Income')} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-black text-white dark:bg-white dark:text-black font-bold text-sm transition-all shadow-md">
+                      <button
+                        onClick={() => setTransactionType('INCOME')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition-all shadow-md ${transactionType === 'INCOME' ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}>
                         <PlusCircle size={18} />
                         INCOME
                       </button>
-                      <button onClick={() => handleAction('Select Expense')} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-zinc-500 font-bold text-sm hover:text-black dark:hover:text-white transition-all">
+                      <button
+                        onClick={() => setTransactionType('EXPENSE')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition-all ${transactionType === 'EXPENSE' ? 'bg-black text-white dark:bg-white dark:text-black shadow-md' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}>
                         <MinusCircle size={18} />
                         EXPENSE
                       </button>
@@ -67,15 +102,15 @@ export default function Finance() {
                     <div className="space-y-2">
                       <label className="text-zinc-500 text-xs font-bold uppercase tracking-wider ml-1">Transaction Amount</label>
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-black dark:text-white font-mono text-xl">$</span>
-                        <input className="w-full bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl py-4 pl-10 pr-4 text-2xl font-mono text-black dark:text-white focus:border-black dark:focus:border-white focus:ring-0 transition-all placeholder:text-zinc-300" placeholder="0.00" type="text" />
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-black dark:text-white font-mono text-xl text-zinc-400">AED</span>
+                        <input value={amountInput} onChange={e => setAmountInput(e.target.value)} className="w-full bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl py-4 pl-16 pr-4 text-2xl font-mono text-black dark:text-white focus:border-black dark:focus:border-white focus:ring-0 transition-all placeholder:text-zinc-300" placeholder="0.00" type="number" />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-zinc-500 text-xs font-bold uppercase tracking-wider ml-1">Reference / Description</label>
-                      <input className="w-full bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl py-4 px-4 text-base font-medium text-black dark:text-white focus:border-black dark:focus:border-white focus:ring-0 transition-all placeholder:text-zinc-400" placeholder="e.g. Monthly Rent, Client Payment" type="text" />
+                      <input value={descInput} onChange={e => setDescInput(e.target.value)} className="w-full bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl py-4 px-4 text-base font-medium text-black dark:text-white focus:border-black dark:focus:border-white focus:ring-0 transition-all placeholder:text-zinc-400" placeholder="e.g. Monthly Rent, Client Payment" type="text" />
                     </div>
-                    <button onClick={() => handleAction('Commit Entry')} className="w-full tactile-button bg-white text-black border-2 border-gray-200 font-black py-5 rounded-xl text-lg uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-gray-50">
+                    <button onClick={handleCommit} className="w-full tactile-button bg-white text-black border-2 border-gray-200 font-black py-5 rounded-xl text-lg uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-gray-50">
                       Commit Entry
                       <CornerDownLeft size={24} className="font-black" />
                     </button>
@@ -103,46 +138,18 @@ export default function Finance() {
                           </tr>
                         </thead>
                         <tbody>
-                          <tr className="hover:bg-black/5 transition-colors group">
-                            <td className="px-6 py-3 border-r border-black/10 text-zinc-800">OCT 14</td>
-                            <td className="px-4 py-3 border-r border-black/10">
-                              <div className="font-bold text-black">STRIPE_PAYOUT</div>
-                              <div className="text-[10px] text-zinc-500 uppercase">Consulting Services</div>
-                            </td>
-                            <td className="px-6 py-3 text-right text-black font-bold">+$2,400.00</td>
-                          </tr>
-                          <tr className="hover:bg-black/5 transition-colors group">
-                            <td className="px-6 py-3 border-r border-black/10 text-zinc-800">OCT 12</td>
-                            <td className="px-4 py-3 border-r border-black/10">
-                              <div className="font-bold text-black">AMAZON_AWS</div>
-                              <div className="text-[10px] text-zinc-500 uppercase">Cloud Infrastructure</div>
-                            </td>
-                            <td className="px-6 py-3 text-right text-black font-bold">-$450.20</td>
-                          </tr>
-                          <tr className="hover:bg-black/5 transition-colors group">
-                            <td className="px-6 py-3 border-r border-black/10 text-zinc-800">OCT 10</td>
-                            <td className="px-4 py-3 border-r border-black/10">
-                              <div className="font-bold text-black">STARBUCKS_021</div>
-                              <div className="text-[10px] text-zinc-500 uppercase">Operating Expense</div>
-                            </td>
-                            <td className="px-6 py-3 text-right text-black font-bold">-$12.50</td>
-                          </tr>
-                          <tr className="hover:bg-black/5 transition-colors group">
-                            <td className="px-6 py-3 border-r border-black/10 text-zinc-800">OCT 08</td>
-                            <td className="px-4 py-3 border-r border-black/10">
-                              <div className="font-bold text-black">UPWORK_ESCROW</div>
-                              <div className="text-[10px] text-zinc-500 uppercase">Development Project</div>
-                            </td>
-                            <td className="px-6 py-3 text-right text-black font-bold">+$1,120.00</td>
-                          </tr>
-                          <tr className="hover:bg-black/5 transition-colors group">
-                            <td className="px-6 py-3 border-r border-black/10 text-zinc-800">OCT 05</td>
-                            <td className="px-4 py-3 border-r border-black/10">
-                              <div className="font-bold text-black">APPLE_STORE</div>
-                              <div className="text-[10px] text-zinc-500 uppercase">Asset Purchase</div>
-                            </td>
-                            <td className="px-6 py-3 text-right text-black font-bold">-$2,199.00</td>
-                          </tr>
+                          {transactions.map(t => (
+                            <tr key={t.id} className="hover:bg-black/5 transition-colors group">
+                              <td className="px-6 py-3 border-r border-black/10 text-zinc-800">{t.date}</td>
+                              <td className="px-4 py-3 border-r border-black/10">
+                                <div className="font-bold text-black uppercase">REF_ID_{t.id.substring(0, 6)}</div>
+                                <div className="text-[10px] text-zinc-500 uppercase">{t.description}</div>
+                              </td>
+                              <td className="px-6 py-3 text-right text-black font-bold">
+                                {t.type === 'INCOME' ? '+' : '-'}{t.amount.toLocaleString('en-AE')} AED
+                              </td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     </div>
@@ -152,11 +159,11 @@ export default function Finance() {
                         <div className="flex gap-8">
                           <div className="text-right">
                             <div className="text-[9px] uppercase font-bold text-zinc-400">Net Debit</div>
-                            <div className="text-sm font-bold text-black">$2,661.70</div>
+                            <div className="text-sm font-bold text-black">{netDebit.toLocaleString('en-AE')} AED</div>
                           </div>
                           <div className="text-right">
                             <div className="text-[9px] uppercase font-bold text-zinc-400">Net Credit</div>
-                            <div className="text-sm font-bold text-black">$3,520.00</div>
+                            <div className="text-sm font-bold text-black">{netCredit.toLocaleString('en-AE')} AED</div>
                           </div>
                         </div>
                       </div>
